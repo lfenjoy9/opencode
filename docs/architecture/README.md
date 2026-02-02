@@ -18,6 +18,7 @@ This directory contains comprehensive architecture documentation for the OpenCod
 | Extend the API | [09-server-api.md](./09-server-api.md) |
 | Modify the UI | [10-tui-app.md](./10-tui-app.md) |
 | Understand sessions | [11-session-management.md](./11-session-management.md) |
+| Add provider auth | [12-authentication.md](./12-authentication.md) |
 
 ## Document Structure
 
