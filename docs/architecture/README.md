@@ -19,6 +19,7 @@ This directory contains comprehensive architecture documentation for the OpenCod
 | Modify the UI | [10-tui-app.md](./10-tui-app.md) |
 | Understand sessions | [11-session-management.md](./11-session-management.md) |
 | Add provider auth | [12-authentication.md](./12-authentication.md) |
+| Write or run tests | [13-testing.md](./13-testing.md) |
 
 ## Document Structure
 

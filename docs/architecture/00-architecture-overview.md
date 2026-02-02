@@ -237,3 +237,4 @@ sequenceDiagram
 - [10-tui-app.md](./10-tui-app.md) - SolidJS terminal UI application
 - [11-session-management.md](./11-session-management.md) - Session lifecycle, compaction, sharing
 - [12-authentication.md](./12-authentication.md) - Provider auth, OAuth, API keys
+- [13-testing.md](./13-testing.md) - Unit tests, E2E tests, CI workflows
