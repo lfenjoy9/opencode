@@ -138,3 +138,12 @@ Bus.publish() ──► SSE Stream ──► Client UI
 
 - [01-cli-entrypoint.md](./01-cli-entrypoint.md) - CLI framework and command routing
 - [02-agent-runtime.md](./02-agent-runtime.md) - Agentic loop and tool execution
+- [03-provider-layer.md](./03-provider-layer.md) - Multi-LLM provider abstraction
+- [04-tool-system.md](./04-tool-system.md) - Tool registration and execution
+- [05-config-system.md](./05-config-system.md) - Layered configuration loading
+- [06-permission-model.md](./06-permission-model.md) - Permission rulesets and prompts
+- [07-storage-layer.md](./07-storage-layer.md) - File-based JSON persistence
+- [08-mcp-integration.md](./08-mcp-integration.md) - Model Context Protocol servers
+- [09-server-api.md](./09-server-api.md) - Hono HTTP API and SSE events
+- [10-tui-app.md](./10-tui-app.md) - SolidJS terminal UI application
+- [11-session-management.md](./11-session-management.md) - Session lifecycle, compaction, sharing
