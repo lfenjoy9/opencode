@@ -75,6 +75,56 @@ packages/
 └─────────────────────────────┘    └─────────────────────────────────────┘
 ```
 
+### Component Diagram (Mermaid)
+
+```mermaid
+graph TB
+    subgraph Entry["Entry Layer"]
+        CLI[CLI - index.ts]
+        TUI[TUI App - SolidJS]
+    end
+
+    subgraph Bootstrap["Bootstrap Layer"]
+        Instance[Instance.provide]
+        Config[Config]
+        Storage[Storage]
+    end
+
+    subgraph API["Server Layer"]
+        Server[Hono Server]
+        SSE[SSE Events]
+    end
+
+    subgraph Core["Core Layer"]
+        Session[Session]
+        Processor[Processor]
+        Prompt[Prompt Assembly]
+    end
+
+    subgraph Execution["Execution Layer"]
+        Provider[Provider Layer]
+        Tools[Tool Layer]
+        Permission[Permission]
+        MCP[MCP Tools]
+    end
+
+    CLI --> Instance
+    TUI --> Server
+    Instance --> Config
+    Instance --> Storage
+    Instance --> Server
+
+    Server --> Session
+    Server --> SSE
+
+    Session --> Processor
+    Session --> Prompt
+    Processor --> Provider
+    Processor --> Tools
+    Tools --> Permission
+    Tools --> MCP
+
+
 ## Key Design Patterns
 
 | Pattern | Location | Purpose |
@@ -117,6 +167,45 @@ Storage ◄────────── Persistence
     │
     ▼
 Bus.publish() ──► SSE Stream ──► Client UI
+```
+
+### Request Lifecycle (Mermaid)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant C as CLI/TUI
+    participant S as Server
+    participant Sess as Session
+    participant P as Processor
+    participant LLM as LLM Provider
+    participant T as Tools
+
+    U->>C: Enter prompt
+    C->>S: POST /session/:id/prompt
+    S->>Sess: addMessage(user)
+    Sess->>P: process(sessionID)
+
+    loop Agentic Loop
+        P->>LLM: stream(messages, tools)
+        LLM-->>P: text-delta
+        P->>Sess: updatePart(text)
+        Sess-->>S: Bus.publish
+        S-->>C: SSE: part.updated
+
+        opt Tool Call
+            LLM-->>P: tool-call
+            P->>T: execute(args)
+            T-->>P: result
+            P->>Sess: updatePart(tool)
+        end
+    end
+
+    LLM-->>P: finish
+    P->>Sess: complete
+    Sess-->>S: Bus.publish(idle)
+    S-->>C: SSE: session.idle
+    C-->>U: Display response
 ```
 
 ## Key Files Quick Reference

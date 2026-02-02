@@ -155,6 +155,73 @@ Session.updateMessage(messageID, parts)
   → Server SSE broadcasts to connected clients
 ```
 
+### Agentic Loop State Machine (Mermaid)
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle: Session created
+
+    Idle --> PromptAssembly: User sends message
+
+    PromptAssembly --> Streaming: LLM.stream()
+
+    Streaming --> TextDelta: Receive text
+    Streaming --> ToolCall: Receive tool-call
+    Streaming --> Finished: Stream complete
+    Streaming --> Error: Stream error
+
+    TextDelta --> Streaming: Continue
+    TextDelta --> UpdatePart: Update session
+
+    ToolCall --> PermissionCheck: Check rules
+
+    PermissionCheck --> ToolExecution: Allowed
+    PermissionCheck --> WaitingApproval: Needs approval
+    PermissionCheck --> Error: Denied
+
+    WaitingApproval --> ToolExecution: User approves
+    WaitingApproval --> Error: User rejects
+
+    ToolExecution --> UpdatePart: Store result
+    UpdatePart --> Streaming: Continue stream
+
+    Finished --> CheckTools: Finish step
+
+    CheckTools --> PromptAssembly: Has tool results
+    CheckTools --> Idle: No tool results
+
+    Error --> Retry: Retryable
+    Error --> Idle: Non-retryable
+    Retry --> Streaming: Backoff complete
+```
+
+### Tool Execution Flow (Mermaid)
+
+```mermaid
+flowchart TD
+    A[Tool Call Received] --> B{Permission Check}
+
+    B -->|Allowed| D[Execute Tool]
+    B -->|Ask| C[Request User Approval]
+    B -->|Denied| E[Throw RejectedError]
+
+    C -->|Approved Once| D
+    C -->|Approved Always| F[Add to Approved List]
+    C -->|Rejected| E
+
+    F --> D
+
+    D --> G{Execution Result}
+    G -->|Success| H[Truncate Output]
+    G -->|Error| I[Format Error]
+
+    H --> J[Update Part Status]
+    I --> J
+
+    J --> K[Bus.publish Event]
+    K --> L[Continue Agentic Loop]
+```
+
 ## Invariants / assumptions
 
 1. **Single active loop per session**: Only one `SessionProcessor.process()` runs per session at a time (enforced by `processing` lock)

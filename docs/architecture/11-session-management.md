@@ -195,6 +195,105 @@ Session.share({ sessionID })
   → Return share URL
 ```
 
+### Session Data Model (Mermaid)
+
+```mermaid
+erDiagram
+    PROJECT ||--o{ SESSION : contains
+    SESSION ||--o{ MESSAGE : contains
+    MESSAGE ||--o{ PART : contains
+
+    PROJECT {
+        string id PK
+        string vcs
+        string worktree
+        number created
+    }
+
+    SESSION {
+        string id PK
+        string projectID FK
+        string parentID FK "nullable"
+        string title
+        string modelID
+        string providerID
+        number createdAt
+        object share "nullable"
+        object summary "nullable"
+    }
+
+    MESSAGE {
+        string id PK
+        string sessionID FK
+        string role "user|assistant"
+        number createdAt
+        object metadata
+    }
+
+    PART {
+        string id PK
+        string messageID FK
+        string type "text|tool|file|patch|summary"
+        object state "type-specific"
+        object time
+    }
+```
+
+### Session Lifecycle (Mermaid)
+
+```mermaid
+stateDiagram-v2
+    [*] --> Created: Session.create()
+
+    Created --> Active: First prompt
+
+    Active --> Processing: User message
+    Processing --> Active: Response complete
+
+    Active --> Compacting: Token limit exceeded
+    Compacting --> Active: Summary created
+
+    Active --> Shared: Session.share()
+    Shared --> Active: Continue chatting
+
+    Active --> Idle: No activity
+
+    Idle --> Active: Resume
+    Idle --> Deleted: Session.delete()
+
+    Deleted --> [*]
+```
+
+### Compaction Flow (Mermaid)
+
+```mermaid
+flowchart TD
+    A[Check Token Count] --> B{Over Limit?}
+
+    B -->|No| C[Continue Normal]
+    B -->|Yes| D[Start Compaction]
+
+    D --> E[Load Messages]
+    E --> F[Get Compaction Agent]
+    F --> G[Generate Summary]
+
+    G --> H[Create Summary Part]
+    H --> I[Prune Old Tool Outputs]
+
+    I --> J{Output > 40k tokens?}
+    J -->|No| K[Keep Output]
+    J -->|Yes| L{Output > 20k tokens?}
+
+    L -->|No| K
+    L -->|Yes| M[Clear/Truncate Output]
+
+    K --> N[Update Storage]
+    M --> N
+
+    N --> O[Bus.publish Compacted]
+    O --> C
+```
+
 ## Invariants / assumptions
 
 1. **Append-only messages**: Messages never deleted mid-conversation (only compaction)
